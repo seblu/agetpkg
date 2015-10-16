@@ -25,11 +25,13 @@ from collections import OrderedDict
 from email.utils import parsedate
 from logging import getLogger, error, debug, DEBUG
 from lzma import open as xzopen
-from os import stat, uname
+from os import stat, uname, getcwd, chdir, geteuid, environ
 from os.path import basename, exists, join
 from pprint import pprint
 from re import match, compile as recompile
 from shutil import copyfileobj
+from subprocess import call
+from tempfile import TemporaryDirectory
 from time import mktime, time
 from urllib.request import urlopen, Request
 from xdg.BaseDirectory import save_cache_path
@@ -160,6 +162,15 @@ class Package(Url):
         if sign and self.sigurl.exists:
             self.sigurl.download(self.sigfilename)
 
+    def install(self, sign=True):
+        """Download and install a package"""
+        with TemporaryDirectory() as tmpdir:
+            cwd = getcwd()
+            chdir(tmpdir)
+            self.get(sign)
+            pacman(["-U", self.filename])
+            chdir(cwd)
+
 class Archive(object):
     """Abstract access to the package Archive"""
 
@@ -234,6 +245,27 @@ class Archive(object):
                 res += [pkg]
         return res
 
+def which(binary):
+    """lookup if bin exists into PATH"""
+    dirs = environ.get("PATH", "").split(":")
+    for d in dirs:
+        if exists(join(d, binary)):
+            return True
+    return False
+
+def pacman(args, asroot=True):
+    """execute pacman (optionally as root)"""
+    cmd = ["pacman" ] + args
+    # add sudo or su if not root and
+    if asroot and geteuid() != 0:
+        if which("sudo"):
+            cmd = ["sudo"] + cmd
+        elif which("su"):
+            cmd = ["su", "root", "-c=%s" % " ".join(cmd) ]
+        else:
+            error("Unable to execute as root: %s" % " ".join(cmd))
+    call(cmd, close_fds=True)
+
 def list_packages(packages, long=False):
     """display a list of packages on stdout"""
     if long:
@@ -244,7 +276,7 @@ def list_packages(packages, long=False):
         print(pattern % package)
 
 def get_packages(packages):
-    """retrieve packages"""
+    """download packages"""
     if len(packages) == 1:
         packages[0].get()
     else:
@@ -253,6 +285,17 @@ def get_packages(packages):
             print(i, pkg)
         n = int(input("Which number? "))
         index[n].get()
+
+def install_packages(packages):
+    """install packages"""
+    if len(packages) == 1:
+        packages[0].install()
+    else:
+        index = dict(enumerate(packages))
+        for i, pkg in index.items():
+            print(i, pkg)
+        n = int(input("Which number? "))
+        index[n].install()
 
 def parse_argv():
     '''Parse command line arguments'''
@@ -273,6 +316,8 @@ def parse_argv():
         help="only list matching packages")
     p_main.add_argument("-g", "--get", action="store_const", dest="mode", const="get",
         help="get matching packages (default)")
+    p_main.add_argument("-i", "--install", action="store_const", dest="mode", const="install",
+        help="install matching packages")
     p_main.add_argument("-a", "--arch", nargs="*", default=[local_arch, "any"],
         help="filter by architectures (default is %s and any. empty means all)" % local_arch)
     p_main.add_argument("-v", "--verbose", action="store_true",
@@ -303,6 +348,8 @@ def main():
             exit(0)
         if args.mode == "list":
             list_packages(packages, long=args.verbose)
+        elif args.mode == "install":
+            install_packages(packages)
         else:
             get_packages(packages)
     except KeyboardInterrupt:
