@@ -282,6 +282,7 @@ def list_packages(packages, long=False):
 
 def select_packages(packages):
     """select a package in a list"""
+    # shortcut to one package
     if len(packages) == 1:
         yield packages[0]
     else:
@@ -292,9 +293,15 @@ def select_packages(packages):
             print("{:{pad}} {}".format(i, pkg, pad=pad))
         selection = ""
         while not match("^(\d+ ){0,}\d+$", selection):
-            selection = input("Select packages: ").strip()
+            selection = input("Select packages (* for all): ").strip()
             if selection == "":
                 return
+            # shortcut to select all packages
+            if selection == "*":
+                for pkg in packages:
+                    yield pkg
+                return
+        # parse selection
         numbers = [ int(x) for x in selection.split(" ") ]
         for num in numbers:
             if num in index.keys():
