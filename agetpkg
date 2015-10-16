@@ -162,15 +162,6 @@ class Package(Url):
         if sign and self.sigurl.exists:
             self.sigurl.download(self.sigfilename)
 
-    def install(self, sign=True):
-        """Download and install a package"""
-        with TemporaryDirectory() as tmpdir:
-            cwd = getcwd()
-            chdir(tmpdir)
-            self.get(sign)
-            pacman(["-U", self.filename])
-            chdir(cwd)
-
 class Archive(object):
     """Abstract access to the package Archive"""
 
@@ -269,6 +260,7 @@ def pacman(args, asroot=True):
             cmd = ["su", "root", "-c=%s" % " ".join(cmd) ]
         else:
             error("Unable to execute as root: %s" % " ".join(cmd))
+    debug("calling: %s" % cmd)
     call(cmd, close_fds=True)
 
 def list_packages(packages, long=False):
@@ -315,9 +307,15 @@ def get_packages(packages):
         pkg.get()
 
 def install_packages(packages):
-    """install packages"""
-    for pkg in select_packages(packages):
-        pkg.install()
+    """install packages in one shot to allow deps to work"""
+    packages = list(select_packages(packages))
+    with TemporaryDirectory() as tmpdir:
+        cwd = getcwd()
+        chdir(tmpdir)
+        for pkg in packages:
+            pkg.get()
+        pacman(["-U"] + [ pkg.filename for pkg in packages ])
+        chdir(cwd)
 
 def parse_argv():
     '''Parse command line arguments'''
