@@ -282,8 +282,9 @@ def select_packages(packages):
     else:
         # display a list of packages to select
         index = dict(enumerate(packages))
+        pad = len("%d" % max(index.keys()))
         for i, pkg in index.items():
-            print(i, pkg)
+            print("{:{pad}} {}".format(i, pkg, pad=pad))
         selection = ""
         while not match("^(\d+ ){0,}\d+$", selection):
             selection = input("Select packages: ").strip()
