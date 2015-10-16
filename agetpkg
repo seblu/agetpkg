@@ -38,7 +38,7 @@ from xdg.BaseDirectory import save_cache_path
 
 # magics
 NAME = "agetpkg"
-VERSION = "0"
+VERSION = "1"
 ARCHIVE_URL = "http://ala.seblu.net/packages/.all/"
 INDEX_FILENAME = "index.0.xz"
 PKG_EXT = ".pkg.tar.xz"
