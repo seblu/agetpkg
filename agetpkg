@@ -23,7 +23,7 @@
 from argparse import ArgumentParser
 from collections import OrderedDict
 from email.utils import parsedate
-from logging import getLogger, error, debug, DEBUG
+from logging import getLogger, error, warn, debug, DEBUG
 from lzma import open as xzopen
 from os import stat, uname, getcwd, chdir, geteuid, environ
 from os.path import basename, exists, join
@@ -275,27 +275,36 @@ def list_packages(packages, long=False):
     for package in packages:
         print(pattern % package)
 
-def get_packages(packages):
-    """download packages"""
+def select_packages(packages):
+    """select a package in a list"""
     if len(packages) == 1:
-        packages[0].get()
+        yield packages[0]
     else:
+        # display a list of packages to select
         index = dict(enumerate(packages))
         for i, pkg in index.items():
             print(i, pkg)
-        n = int(input("Which number? "))
-        index[n].get()
+        selection = ""
+        while not match("^(\d+ ){0,}\d+$", selection):
+            selection = input("Select packages: ").strip()
+            if selection == "":
+                return
+        numbers = [ int(x) for x in selection.split(" ") ]
+        for num in numbers:
+            if num in index.keys():
+                yield index[num]
+            else:
+                warn("No package n°%s" % num)
+
+def get_packages(packages):
+    """download packages"""
+    for pkg in select_packages(packages):
+        pkg.get()
 
 def install_packages(packages):
     """install packages"""
-    if len(packages) == 1:
-        packages[0].install()
-    else:
-        index = dict(enumerate(packages))
-        for i, pkg in index.items():
-            print(i, pkg)
-        n = int(input("Which number? "))
-        index[n].install()
+    for pkg in select_packages(packages):
+        pkg.install()
 
 def parse_argv():
     '''Parse command line arguments'''
