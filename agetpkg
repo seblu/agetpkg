@@ -367,7 +367,8 @@ def main():
         error(exp)
         exit(Error.ERR_FATAL)
     except Exception as exp:
-        error("Unknown error. Please report it with --debug.")
+        error("Unknown error. Please report it with --debug")
+        error("at https://github.com/seblu/agetpkg/issues.")
         error(exp)
         if getLogger().getEffectiveLevel() == DEBUG:
             raise
