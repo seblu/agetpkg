@@ -7,7 +7,9 @@ pkgdesc='Archlinux Archive Get Package (Git version)'
 arch=('any')
 url='https://github.com/seblu/agetpkg'
 license=('GPL2')
+makedepends=('git')
 depends=('python' 'python-xdg')
+conflicts=('agetpkg')
 
 package() {
   cd "$startdir"
