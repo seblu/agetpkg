@@ -227,10 +227,11 @@ class Archive(object):
             return self.remote_index.download(self.local_index)
         debug("Remote and local indexes seems equal. No update.")
 
-    def search(self, name_pattern, version_pattern, arch_list=None):
+    def search(self, name_pattern, version_pattern, release_pattern, arch_list=None):
         """Search for a package """
         name_regex = recompile(name_pattern)
         version_regex = recompile(version_pattern) if version_pattern is not None else None
+        release_regex = recompile(release_pattern) if release_pattern is not None else None
         res = list()
         for pkg in self._index.values():
             if name_regex.search(pkg.name):
@@ -240,7 +241,11 @@ class Archive(object):
                         continue
                 # check against version
                 if version_regex is not None:
-                    if not version_regex.search(pkg.full_version):
+                    if not version_regex.search(pkg.version):
+                        continue
+                # check against release
+                if release_regex is not None:
+                    if not release_regex.search(pkg.release):
                         continue
                 res += [pkg]
         return res
@@ -339,6 +344,8 @@ def parse_argv():
         help="regex to match a package name")
     p_main.add_argument("version", nargs="?",
         help="regex to match a package version")
+    p_main.add_argument("release", nargs="?",
+        help="regex to match a package release")
     return p_main.parse_args()
 
 def main():
@@ -352,7 +359,7 @@ def main():
         # init archive interface
         archive = Archive(args.url, args.timeout, args.update)
         # select target pacakges
-        packages = archive.search(args.package, args.version, args.arch)
+        packages = archive.search(args.package, args.version, args.release, args.arch)
         if len(packages) == 0:
             print("No match found.")
             exit(0)
