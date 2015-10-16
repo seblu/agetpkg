@@ -279,7 +279,7 @@ def parse_argv():
         help="display more information")
     p_main.add_argument("--url", help="archive URL",
         default=ARCHIVE_URL)
-    p_main.add_argument("-t", "--timeout", default=5, help="connection timeout (10s)")
+    p_main.add_argument("-t", "--timeout", default=10, help="connection timeout (10s)")
     p_main.add_argument("package",
         help="regex to match a package name")
     p_main.add_argument("version", nargs="?",
