@@ -321,10 +321,7 @@ def parse_argv():
     '''Parse command line arguments'''
     local_arch = uname().machine
     p_main = ArgumentParser()
-    p_main.add_argument("--version", action="version",
-                        version="%(prog)s version " + VERSION)
-    p_main.add_argument("--debug", action="store_true",
-                        help="debug mode")
+    # update index options
     g_update = p_main.add_mutually_exclusive_group()
     g_update.add_argument("-u", "--force-update",
         action="store_const", dest="update", const=2, default=1,
@@ -332,19 +329,28 @@ def parse_argv():
     g_update.add_argument("-U", "--no-update",
         action="store_const", dest="update", const=0,
         help="disable index update")
-    p_main.add_argument("-l", "--list", action="store_const", dest="mode", const="list",
-        help="only list matching packages")
-    p_main.add_argument("-g", "--get", action="store_const", dest="mode", const="get",
-        help="get matching packages (default)")
-    p_main.add_argument("-i", "--install", action="store_const", dest="mode", const="install",
-        help="install matching packages")
-    p_main.add_argument("-a", "--arch", nargs="*", default=[local_arch, "any"],
-        help="filter by architectures (default is %s and any. empty means all)" % local_arch)
+    # action mode options
+    g_action = p_main.add_mutually_exclusive_group()
+    g_action.add_argument("-g", "--get", action="store_const", dest="mode",
+        const="get", help="get matching packages (default mode)")
+    g_action.add_argument("-l", "--list", action="store_const", dest="mode",
+        const="list", help="only list matching packages")
+    g_action.add_argument("-i", "--install", action="store_const", dest="mode",
+        const="install", help="install matching packages")
+    # common options
+    p_main.add_argument("-A", "--arch", nargs="*", default=[local_arch, "any"],
+        help="filter by architectures (default: %s and any. empty means all)" % local_arch)
     p_main.add_argument("-v", "--verbose", action="store_true",
         help="display more information")
     p_main.add_argument("--url", help="archive URL, default: %s" % ARCHIVE_URL,
         default=environ.get("ARCHIVE_URL", ARCHIVE_URL))
-    p_main.add_argument("-t", "--timeout", default=10, help="connection timeout (10s)")
+    p_main.add_argument("-t", "--timeout", default=10,
+        help="connection timeout (default: 10s)")
+    p_main.add_argument("--version", action="version",
+                        version="%(prog)s version " + VERSION)
+    p_main.add_argument("--debug", action="store_true",
+                        help="debug mode")
+    # positional args
     p_main.add_argument("package",
         help="regex to match a package name")
     p_main.add_argument("version", nargs="?",
