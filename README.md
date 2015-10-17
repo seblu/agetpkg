@@ -10,21 +10,31 @@ Introduction
 Usage
 -----
 
-###### Download xterm version 296
+###### Download a previous version of ferm package
 ```bash
-agetpkg ^xterm$ 296
-# or
-agetpkg -g ^xterm$ 296
+agetpkg ferm
 ```
 
-###### List xterm version 296
+###### Download xterm version 296
 ```bash
-agetpkg -l ^xterm$ 296
+agetpkg ^xterm 296
+# or
+agetpkg -g ^xterm 296
+```
+
+###### List all zsh versions
+```bash
+agetpkg -l zsh$
 ```
 
 ###### Install all gvfs packages in version 1.26.0 release 3
 ```bash
 agetpkg -i gvfs 1.26.0 3
+```
+
+###### Download all pwgen packages
+```bash
+agetpkg -g -a pwgen
 ```
 
 ###### List only i686 packages of nftables
@@ -35,11 +45,6 @@ agetpkg -l -A i686 -- nftables
 ###### Force update of the index before listing packages matching i3
 ```bash
 agetpkg -u -l i3-wm
-```
-
-###### Download all version of xterm
-```bash
-agetpkg -l -a ^xterm$
 ```
 
 ###### Use another archive url
@@ -72,8 +77,7 @@ pacman -S agetpkg
 
 To install the git development version, run:
 ```bash
-makepkg
-pacman -U agetpkg-*-any.pkg.tar.xz
+makepkg -i
 ```
 
 Dependencies
