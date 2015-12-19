@@ -3,7 +3,7 @@ agetpkg
 
 Introduction
 ------------
-**agetpkg** is a command line tool used to quickly list/get/install packages stored on the [Archlinux Archive](https://wiki.archlinux.org/index.php/Arch_Linux_Archive).
+**agetpkg** is a command line tool used to quickly list/get/install packages stored on the [Arch Linux Archive](https://wiki.archlinux.org/index.php/Arch_Linux_Archive).
 
 **agetpkg** means **A**rchive **G**et **P**ackage.
 

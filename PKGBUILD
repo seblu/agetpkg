@@ -3,7 +3,7 @@
 pkgname=agetpkg-git
 pkgver="$(git log --pretty=format:''|wc -l)"
 pkgrel=1
-pkgdesc='Archlinux Archive Get Package (Git version)'
+pkgdesc='Arch Linux Archive Get Package (Git version)'
 arch=('any')
 url='https://github.com/seblu/agetpkg'
 license=('GPL2')
