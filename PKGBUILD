@@ -10,6 +10,7 @@ license=('GPL2')
 makedepends=('git')
 depends=('python' 'python-xdg')
 conflicts=('agetpkg')
+provides=('agetpkg')
 
 package() {
   cd "$startdir"
