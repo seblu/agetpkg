@@ -288,7 +288,10 @@ def select_packages(packages, select_all=False):
             print("{:{pad}} {}".format(i, pkg, pad=pad))
         selection = ""
         while not match("^(\d+ ){0,}\d+$", selection):
-            selection = input("Select packages (* for all): ").strip()
+            try:
+                selection = input("Select packages (* for all): ").strip()
+            except EOFError:
+                return
             if selection == "":
                 return
             # shortcut to select all packages
