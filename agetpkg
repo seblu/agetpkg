@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # agetpkg - Archive Get Package
-# Copyright © 2015 Sébastien Luttringer
+# Copyright © 2017 Sébastien Luttringer
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@ from xdg.BaseDirectory import save_cache_path
 
 # magics
 NAME = "agetpkg"
-VERSION = "2"
+VERSION = "3"
 ARCHIVE_URL = "https://archive.archlinux.org/packages/.all/"
 INDEX_FILENAME = "index.0.xz"
 PKG_EXT = ".pkg.tar.xz"
