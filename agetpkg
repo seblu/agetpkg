@@ -39,7 +39,7 @@ from xdg.BaseDirectory import save_cache_path
 # magics
 NAME = "agetpkg"
 VERSION = "2"
-ARCHIVE_URL = "http://archive.archlinux.org/packages/.all/"
+ARCHIVE_URL = "https://archive.archlinux.org/packages/.all/"
 INDEX_FILENAME = "index.0.xz"
 PKG_EXT = ".pkg.tar.xz"
 SIG_EXT = ".sig"
