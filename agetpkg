@@ -327,7 +327,7 @@ def install_packages(packages, select_all=False):
 def parse_argv():
     '''Parse command line arguments'''
     local_arch = uname().machine
-    p_main = ArgumentParser()
+    p_main = ArgumentParser(prog=NAME)
     # update index options
     g_update = p_main.add_mutually_exclusive_group()
     g_update.add_argument("-u", "--force-update",
