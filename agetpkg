@@ -40,6 +40,7 @@ from xdg.BaseDirectory import save_cache_path
 NAME = "agetpkg"
 VERSION = "3"
 ARCHIVE_URL = "https://archive.archlinux.org/packages/.all/"
+REPORT_URL = "https://github.com/seblu/agetpkg/issues"
 INDEX_FILENAME = "index.0.xz"
 PKG_EXT = ".pkg.tar.xz"
 SIG_EXT = ".sig"
@@ -394,8 +395,7 @@ def main():
         error(exp)
         exit(Error.ERR_FATAL)
     except Exception as exp:
-        error("Unknown error. Please report it with --debug")
-        error("at https://github.com/seblu/agetpkg/issues.")
+        error(f"Unknown error. Please report it with --debug at {REPORT_URL}.")
         error(exp)
         if getLogger().getEffectiveLevel() == DEBUG:
             raise
