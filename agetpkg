@@ -56,7 +56,7 @@ class Url(object):
     """Remote Ressource"""
 
     HTTP_HEADERS = {
-        "User-Agent": "%s v%s" % (NAME, VERSION),
+        "User-Agent": f"{NAME} v{VERSION}",
     }
 
     def __init__(self, url, timeout):
@@ -80,39 +80,39 @@ class Url(object):
         try:
             return int(self.headers["Content-Length"])
         except Exception as exp:
-            raise Error("Failed to get size of %s: %s" % (self.url, exp))
+            raise Error(f"Failed to get size of {self.url}: {exp}")
 
     @property
     def lastmod(self):
         try:
             return int(mktime(parsedate(self.headers["Last-Modified"])))
         except Exception as exp:
-            raise Error("Failed to get last modification date of %s: %s" % (self.url, exp))
+            raise Error(f"Failed to get last modification date of {self.url}: {exp}")
 
     @property
     def headers(self):
         """Return a dict with url headers"""
         if not hasattr(self, "_headers"):
             try:
-                debug("Request headers on URL: %s" % self.url)
+                debug(f"Request headers on URL: {self.url}")
                 url_req = Request(self.url, method="HEAD", headers=self.HTTP_HEADERS)
                 remote_fd = urlopen(url_req, timeout=self.timeout)
                 self._headers = dict(remote_fd.getheaders())
             except Exception as exp:
-                raise Error("Failed to get headers at %s: %s" % (self, exp))
+                raise Error(f"Failed to get headers at {self}: {exp}")
         return getattr(self, "_headers")
 
     def download(self, destination):
         """Download URL to destination"""
-        debug("Downloading from : %s" % self.url)
-        debug("            to   : %s" % destination)
+        debug(f"Downloading from : {self.url}")
+        debug(f"            to   : {destination}")
         try:
             url_req = Request(self.url, headers=self.HTTP_HEADERS)
             remote_fd = urlopen(url_req, timeout=self.timeout)
             local_fd = open(destination, "wb")
             copyfileobj(remote_fd, local_fd)
         except Exception as exp:
-            raise Error("Failed to download %s: %s" % (self, exp))
+            raise Error(f"Failed to download {self}: {exp}")
 
 class Package(Url):
     """Abstract a multi versionned package"""
@@ -126,7 +126,7 @@ class Package(Url):
         # regex is not strict, but we are not validating something here
         m = match(r"^([\w@._+-]+)-((?:(\d+):)?([^-]+)-([^-]+))-(\w+)", self.filename)
         if m is None:
-            raise Error("Unable to parse package info from filename %s" % self.filename)
+            raise Error(f"Unable to parse package info from filename {self.filename}")
         (self.name, self.full_version, self.epoch, self.version, self.release,
          self.arch) = m.groups()
         # no epoch means 0 (man PKGBUILD)
@@ -156,9 +156,9 @@ class Package(Url):
         """Download the package locally"""
         if not force:
             if exists(self.filename):
-                raise Error("Local file %s already exists" % self.filename)
+                raise Error(f"Local file {self.filename} already exists")
             if sign and exists(self.sigfilename):
-                raise Error("Local file %s already exists" % self.sigfilename)
+                raise Error(f"Local file {self.sigfilename} already exists")
         self.url.download(self.filename)
         if sign and self.sigurl.exists:
             self.sigurl.download(self.sigfilename)
@@ -183,13 +183,13 @@ class Archive(object):
         self._load_index()
 
     def _load_index(self):
-        debug("Loading index from %s" % self.local_index)
+        debug(f"Loading index from {self.local_index}")
         fd = xzopen(self.local_index, "rb")
         self._index = OrderedDict()
         for line in fd.readlines():
             key = line.decode().rstrip()
-            self._index[key] = Package("%s%s%s" % (self.url, key, PKG_EXT), self.timeout)
-        debug("Index loaded: %s packages" % len(self._index))
+            self._index[key] = Package(f"{self.url}{key}{PKG_EXT}", self.timeout)
+        debug(f"Index loaded: {len(self._index)} packages")
 
     def update_index(self, force=False):
         """Update index remotely when needed"""
@@ -201,21 +201,21 @@ class Archive(object):
             remote_size = self.remote_index.size
             remote_lastmod = self.remote_index.lastmod
         except Exception as exp:
-            debug("Failed to get remote index size/lastmod: %s" % exp)
+            debug(f"Failed to get remote index size/lastmod: {exp}")
             return self.remote_index.download(self.local_index)
         # get local info
         try:
             local_st = stat(self.local_index)
         except Exception as exp:
-            debug("Failed to get local stat: %s" % exp)
+            debug(f"Failed to get local stat: {exp}")
             return self.remote_index.download(self.local_index)
         # compare size
         if remote_size != local_st.st_size:
-            debug("Size differ between remote and local index (%s vs %s)" % (remote_size, local_st.st_size))
+            debug(f"Size differ between remote and local index ({remote_size} vs {local_st.st_size})")
             return self.remote_index.download(self.local_index)
         # compare date
         elif remote_lastmod > local_st.st_mtime:
-            debug("Remote index is newer than local, updating it (%s vs %s)" % (remote_lastmod, local_st.st_mtime))
+            debug(f"Remote index is newer than local, updating it ({remote_lastmod} vs {local_st.st_mtime})")
             return self.remote_index.download(self.local_index)
         debug("Remote and local indexes seems equal. No update.")
 
@@ -258,10 +258,10 @@ def pacman(args, asroot=True):
         if which("sudo"):
             cmd = ["sudo"] + cmd
         elif which("su"):
-            cmd = ["su", "root", "-c=%s" % " ".join(cmd) ]
+            cmd = ["su", "root", f"-c={' '.join(cmd)}" ]
         else:
-            error("Unable to execute as root: %s" % " ".join(cmd))
-    debug("calling: %s" % cmd)
+            error(f"Unable to execute as root: {' '.join(cmd)}")
+    debug(f"calling: {cmd}")
     call(cmd, close_fds=True)
 
 def list_packages(packages, long=False):
@@ -284,9 +284,9 @@ def select_packages(packages, select_all=False):
     else:
         # display a list of packages to select
         index = dict(enumerate(packages))
-        pad = len("%d" % max(index.keys()))
+        pad = len(f"{max(index.keys()):d}")
         for i, pkg in index.items():
-            print("{:{pad}} {}".format(i, pkg, pad=pad))
+            print(f"{i:{pad}} {pkg}")
         selection = ""
         while not match(r"^(\d+ ){0,}\d+$", selection):
             try:
@@ -306,7 +306,7 @@ def select_packages(packages, select_all=False):
             if num in index.keys():
                 yield index[num]
             else:
-                warn("No package n°%s" % num)
+                warn(f"No package n°{num}")
 
 def get_packages(packages, select_all=False):
     """download packages"""
@@ -348,15 +348,15 @@ def parse_argv():
     p_main.add_argument("-a", "--all", action="store_true",
         help="select all packages without prompting")
     p_main.add_argument("-A", "--arch", nargs="*", default=[local_arch, "any"],
-        help="filter by architectures (default: %s and any. empty means all)" % local_arch)
+        help=f"filter by architectures (default: {local_arch} and any. empty means all)")
     p_main.add_argument("-v", "--verbose", action="store_true",
         help="display more information")
-    p_main.add_argument("--url", help="archive URL, default: %s" % ARCHIVE_URL,
+    p_main.add_argument("--url", help=f"archive URL, default: {ARCHIVE_URL}",
         default=environ.get("ARCHIVE_URL", ARCHIVE_URL))
     p_main.add_argument("-t", "--timeout", default=10,
         help="connection timeout (default: 10s)")
     p_main.add_argument("--version", action="version",
-                        version="%(prog)s version " + VERSION)
+                        version=f"{NAME} version {VERSION}")
     p_main.add_argument("--debug", action="store_true",
                         help="debug mode")
     # positional args
