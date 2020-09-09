@@ -124,7 +124,7 @@ class Package(Url):
         self.filename = basename(url)
         self.sigfilename = self.filename + SIG_EXT
         # regex is not strict, but we are not validating something here
-        m = match("^([\w@._+-]+)-((?:(\d+):)?([^-]+)-([^-]+))-(\w+)", self.filename)
+        m = match(r"^([\w@._+-]+)-((?:(\d+):)?([^-]+)-([^-]+))-(\w+)", self.filename)
         if m is None:
             raise Error("Unable to parse package info from filename %s" % self.filename)
         (self.name, self.full_version, self.epoch, self.version, self.release,
@@ -288,7 +288,7 @@ def select_packages(packages, select_all=False):
         for i, pkg in index.items():
             print("{:{pad}} {}".format(i, pkg, pad=pad))
         selection = ""
-        while not match("^(\d+ ){0,}\d+$", selection):
+        while not match(r"^(\d+ ){0,}\d+$", selection):
             try:
                 selection = input("Select packages (* for all): ").strip()
             except EOFError:
