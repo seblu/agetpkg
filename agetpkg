@@ -134,7 +134,7 @@ class Package(Url):
             self.epoch = 0
 
     def __str__(self):
-        return self.filename
+        return f"{self.name} {self.full_version} {self.arch}"
 
     def __getitem__(self, key):
         try:
