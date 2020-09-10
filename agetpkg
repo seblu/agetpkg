@@ -102,8 +102,10 @@ class Url(object):
                 raise Error(f"Failed to get headers at {self}: {exp}")
         return getattr(self, "_headers")
 
-    def download(self, destination):
+    def download(self, destination, overwrite=True):
         """Download URL to destination"""
+        if not overwrite and exists(destination):
+            raise Error(f"Local file {destination} already exists")
         debug(f"Downloading from : {self.url}")
         debug(f"            to   : {destination}")
         try:
@@ -154,14 +156,9 @@ class Package(Url):
 
     def get(self, sign=True, force=False):
         """Download the package locally"""
-        if not force:
-            if exists(self.filename):
-                raise Error(f"Local file {self.filename} already exists")
-            if sign and exists(self.sigfilename):
-                raise Error(f"Local file {self.sigfilename} already exists")
-        self.url.download(self.filename)
+        self.url.download(self.filename, force)
         if sign and self.sigurl.exists:
-            self.sigurl.download(self.sigfilename)
+            self.sigurl.download(self.sigfilename, force)
 
 class Archive(object):
     """Abstract access to the package Archive"""
