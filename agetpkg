@@ -38,7 +38,7 @@ from xdg.BaseDirectory import save_cache_path
 
 # magics
 NAME = "agetpkg"
-VERSION = "3"
+VERSION = "4"
 ARCHIVE_URL = "https://archive.archlinux.org/packages/.all/"
 REPORT_URL = "https://github.com/seblu/agetpkg/issues"
 INDEX_FILENAME = "index.0.xz"
