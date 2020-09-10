@@ -42,10 +42,10 @@ VERSION = "3"
 ARCHIVE_URL = "https://archive.archlinux.org/packages/.all/"
 REPORT_URL = "https://github.com/seblu/agetpkg/issues"
 INDEX_FILENAME = "index.0.xz"
-PKG_EXT = ".pkg.tar.xz"
+PKG_EXT = [".pkg.tar.zst", ".pkg.tar.xz"]
 SIG_EXT = ".sig"
 
-class Error(BaseException):
+class Error(Exception):
     """Error"""
     ERR_USAGE = 1
     ERR_FATAL = 2
@@ -117,18 +117,16 @@ class Url(object):
             raise Error(f"Failed to download {self}: {exp}")
 
 class Package(Url):
-    """Abstract a multi versionned package"""
+    """Abstract a specific package version"""
 
-    def __init__(self, url, timeout):
-        self.url = Url(url, timeout)
-        self.sigurl = Url(url + SIG_EXT, timeout)
+    def __init__(self, repourl, basename, timeout):
+        self.repourl = repourl
+        self.basename = basename
         self.timeout = timeout
-        self.filename = basename(url)
-        self.sigfilename = self.filename + SIG_EXT
         # regex is not strict, but we are not validating something here
-        m = match(r"^([\w@._+-]+)-((?:(\d+):)?([^-]+)-([^-]+))-(\w+)", self.filename)
+        m = match(r"^([\w@._+-]+)-((?:(\d+):)?([^-]+)-([^-]+))-(\w+)", basename)
         if m is None:
-            raise Error(f"Unable to parse package info from filename {self.filename}")
+            raise Error(f"Unable to parse package info from: {basename}")
         (self.name, self.full_version, self.epoch, self.version, self.release,
          self.arch) = m.groups()
         # no epoch means 0 (man PKGBUILD)
@@ -145,6 +143,23 @@ class Package(Url):
             raise KeyError()
 
     @property
+    def url(self):
+        """The URL object of the package"""
+        if not hasattr(self, "_url"):
+            # index.0 format doesn't ship files extension, so we have to guess it.
+            for ext in PKG_EXT:
+                self._url = Url(self.repourl + self.basename + ext, self.timeout)
+                if self._url.exists:
+                    return self._url
+            raise Error(f"Unable to find package at {self.repourl}{self.basename}{PKG_EXT}")
+        return self._url
+
+    @property
+    def filename(self):
+        """Return package filename"""
+        return basename(str(self.url))
+
+    @property
     def size(self):
         """Return package Content-Length (size in bytes)"""
         return self.url.size
@@ -154,11 +169,13 @@ class Package(Url):
         """Return package Last-Modified date (in seconds since epoch)"""
         return self.url.lastmod
 
-    def get(self, sign=True, force=False):
+    def get(self, overwrite=False):
         """Download the package locally"""
-        self.url.download(self.filename, force)
-        if sign and self.sigurl.exists:
-            self.sigurl.download(self.sigfilename, force)
+        self.url.download(self.filename, overwrite)
+        # try to get signature when available
+        sigurl = Url(str(self.url) + SIG_EXT, self.timeout)
+        if sigurl.exists:
+            sigurl.download(self.filename + SIG_EXT, overwrite)
 
 class Archive(object):
     """Abstract access to the package Archive"""
@@ -185,7 +202,7 @@ class Archive(object):
         self._index = OrderedDict()
         for line in fd.readlines():
             key = line.decode().rstrip()
-            self._index[key] = Package(f"{self.url}{key}{PKG_EXT}", self.timeout)
+            self._index[key] = Package(self.url, key, self.timeout)
         debug(f"Index loaded: {len(self._index)} packages")
 
     def update_index(self, force=False):
